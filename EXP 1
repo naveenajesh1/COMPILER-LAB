@@ -15,8 +15,25 @@ int isKeyword(char *buffer) {
     return 0;
 }
 
+int isNumber(char *buffer) {
+    int dotCount = 0;
+    for (int i = 0; buffer[i] != '\0'; i++) {
+        if (buffer[i] == '.') {
+            dotCount++;
+        } else if (!isdigit(buffer[i])) {
+            return 0;  // Not a number if it contains non-digit and non-dot characters
+        }
+    }
+    return dotCount <= 1;  // Valid number if it has zero or exactly one dot
+}
+
+int isOperator(char ch) {
+    char operators[] = "+-*/%=";
+    return strchr(operators, ch) != NULL;
+}
+
 int main() {
-    char ch, buffer[15], operators[] = "+-*/%=";
+    char ch, buffer[15];
     FILE *fp = fopen("inp.txt", "r");
     if (!fp) { printf("Error opening file\n"); exit(0); }
 
@@ -33,12 +50,23 @@ int main() {
             continue;
         }
 
-        if (strchr(operators, ch)) { printf("%c is operator\n", ch); }
-
-        if (isalnum(ch)) buffer[j++] = ch;
-        else if ((ch == ' ' || ch == '\n') && j) {
+        if (isalnum(ch) || ch == '.') buffer[j++] = ch;  // Include '.' in the buffer
+        else if ((ch == ' ' || ch == '\n' || isOperator(ch)) && j) {
             buffer[j] = '\0'; j = 0;
-            printf("%s is %s\n", buffer, isKeyword(buffer) ? "keyword" : "identifier");
+
+            if (isKeyword(buffer)) {
+                printf("%s is keyword\n", buffer);
+            } else if (isNumber(buffer)) {
+                printf("%s is a number\n", buffer);
+            } else {
+                // Treat "main" and "printf" as identifiers
+                printf("%s is an identifier\n", buffer);
+            }
+        }
+
+        // Handle operators separately for correct formatting
+        if (isOperator(ch)) {
+            printf("%c is operator\n", ch);
         }
     }
     fclose(fp);
